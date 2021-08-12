@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+before_install:
+  - docker build -t jinyanc/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run jinyanc/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t jinyanc/multi-client ./client
+  - docker build -t jinyanc/multi-nginx ./nginx
+  - docker build -t jinyanc/multi-server ./server
+  - docker build -t jinyanc/multi-worker ./worker
+# Log in to the docker ci
+- echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" -password-stdin
+
+# Take those images and push them to dockerhub
+- docker push jinyanc/multi-client
+- docker push jinyanc/multi-nginx
+- docker push jinyanc/multi-server
+- docker push jinyanc/multi-worker 
